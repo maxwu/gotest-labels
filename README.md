@@ -1,25 +1,41 @@
 # gotestlabels
 
-GoTestLabels is a Go package that provides a way to select test cases by labels in testing function comments and it doesn't need to change the source code.
+GoTestLabels is a tiny go package that provides a way to select test cases by labels in testing function comments with one line import code update.
+
+## TLDR
+
+Add one line of anonymous import code:
+
+```go
+_ "github.com/maxwu/gotestlabels/apply"
+```
+
+Add labels to the test case:
+```go
+// @group=demo
+// @env=dev
+func TestExample(t *testing.T) {
+    //...
+}
+```
+
+Run the test with label selector, multiple label conditions are combined with logical `AND`:
+
+```sh
+go test -v -labels="group=demo" -count=1 ./examples/simple/...
+```
+
+## Background
 
 This package attempts to offload users from the golang `testing` package internal implementation details and the the ASK parsing process
 steps and enable readers to filter test cases with labels. The go testing CLI provided the `-run` and `-list` flags to filter tests via regex against the test function names. However, sometimes it's not convenient to keep long function names as the convention or only selec
-tests via the linear matching mechanism. For example, if the tests are cataloged in multiple dimensions like `TestAddByClickInDevForIntegration` and `TestAddByClickInProdForRegression`. This package is designed to provide a multiple dimension test
-case selector with no actual coding maintenance efforts.
+tests via the linear matching mechanism. For example, if the tests are cataloged in multiple dimensions like `TestAddByClickInDevForIntegration` and `TestAddByClickInProdForRegression`. This package is designed to provide a multiple dimension test case selector with no actual coding maintenance efforts.
 
 ## Usage
 
 ### Filter the tests with labels
 
-To use GoTestLabels, import the package and add labels to your test cases:
-
-To install GoTestLabels, use `go get`:
-
-```sh
-go get github.com/maxwu/gotestlabels
-```
-
-Three ways to use the package to filter tests, one is just to import the `github.com/maxwu/gotestlabels/apply` package
+Three ways are supported to use the package to filter tests, one is just to import the `github.com/maxwu/gotestlabels/apply` package
 in anonymous, which has an automatically init function to do the filtering. The other way is to explicitly import
 the `github.com/maxwu/gotestlabels` package and call the `gotestlabels.MutateTestFuncsByLabels()` function in your
 testing package's init function or TestMain function. If the parent package refers to a sub package underneath, adding
