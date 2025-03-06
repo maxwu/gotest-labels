@@ -10,12 +10,6 @@ import (
 	_ "gotestlabels/apply"
 )
 
-// func TestMain(m *testing.M) {
-// 	gotestlabels.MutateTestFuncsByLabels()
-// 	code := m.Run()
-// 	os.Exit(code)
-// }
-
 func TestUnderSimpleDelta(t *testing.T) {
 	t.Log("Testing examples.simple.undersimple.TestUnderSimpleDelta")
 }

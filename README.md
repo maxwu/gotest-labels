@@ -1,16 +1,24 @@
 # gotestlabels
 
-GoTestLabels is a tiny go package that provides a way to select test cases by labels in testing function comments with one line import code update.
+GoTestLabels is a tiny go package that to select test cases by labels within testing function comments.
+
+It is tiny with ~300 lines of code without third party dependencies. The package can be used with one line of anonymous
+import code in the testing code.
 
 ## TLDR
 
-Add one line of anonymous import code:
+Add one line of anonymous import code in the `*_test.go` source file:
 
 ```go
-_ "github.com/maxwu/gotestlabels/apply"
+import (
+    "testing"
+    //...
+    _ "github.com/maxwu/gotestlabels/apply"
+)
 ```
 
-Add labels to the test case:
+Add labels to the test case in your `*_test.go` source file:
+
 ```go
 // @group=demo
 // @env=dev
@@ -24,12 +32,6 @@ Run the test with label selector, multiple label conditions are combined with lo
 ```sh
 go test -v -labels="group=demo" -count=1 ./examples/simple/...
 ```
-
-## Background
-
-This package attempts to offload users from the golang `testing` package internal implementation details and the the ASK parsing process
-steps and enable readers to filter test cases with labels. The go testing CLI provided the `-run` and `-list` flags to filter tests via regex against the test function names. However, sometimes it's not convenient to keep long function names as the convention or only selec
-tests via the linear matching mechanism. For example, if the tests are cataloged in multiple dimensions like `TestAddByClickInDevForIntegration` and `TestAddByClickInProdForRegression`. This package is designed to provide a multiple dimension test case selector with no actual coding maintenance efforts.
 
 ## Usage
 
@@ -113,7 +115,7 @@ func TestExample(t *testing.T) {
 }
 ```
 
-To run the above example, the CLI could be: 
+To run the above example, the CLI could be:
 
 ```sh
 TEST_LABELS="group=demo" go test -v ./yourpackage
@@ -122,10 +124,11 @@ TEST_LABELS="group=demo" go test -v ./yourpackage
 or,
 
 ```sh
-go test -v -labels="group=demo"./yourpackage
+go test -v -labels="group=demo" ./yourpackage
 ```
 
-Given the tests in [examples](examples) folder, the below CLI runs tests with label `group=demo`:
+Given the tests in [examples](examples) folder, the below CLI runs tests with label `group=demo`. In this sample CLI,
+only the TestSimpleAlpha and TestSimpleGamma cases are run and the TestSimpleBeta has no such label and will be skipped.
 
 ```sh
 ❯ TEST_LABELS="group=demo" go test -v ./examples/simple
@@ -136,7 +139,21 @@ Given the tests in [examples](examples) folder, the below CLI runs tests with la
     demo_test.go:25: Testing examples.simple.TestSimpleGamma
 --- PASS: TestSimpleGamma (0.00s)
 PASS
-ok  	gotestlabels/examples/simple	0.429s
+ok  	gotestlabels/examples/simple	0.267s
+```
+
+Or, users can list the test cases with labels.
+
+```sh
+❯ go test -v ./examples/simple -list . -labels "group=demo"
+TestSimpleAlpha
+TestSimpleGamma
+ok  	gotestlabels/examples/simple	0.268s
+# Or, use the CLI flag
+❯ TEST_LABELS="group=demo" go test -v ./examples/simple -list .
+TestSimpleAlpha
+TestSimpleGamma
+ok  	gotestlabels/examples/simple	0.268s
 ```
 
 To run the tests with label `env=dev`, the CLI could be:
@@ -147,18 +164,27 @@ To run the tests with label `env=dev`, the CLI could be:
     demo_test.go:20: Testing examples.simple.TestSimpleBeta
 --- PASS: TestSimpleBeta (0.00s)
 PASS
-ok  	gotestlabels/examples/simple	0.283s
+ok  	gotestlabels/examples/simple	0.270s
 ```
 
 Readers are kindly reminded to add `-count=1` to the CLI since there's only env var changes so the tests shall be forced
 to rerun. Actually the test codes are rebuilt to new temporary binary file but the objective of this package is to offload
 readers from golang `testing` package internal details.
 
-### Debug
+### Troubleshooting
 
-* To enable debug logs, set env var `GO_LOG=debug`.
 * Add `-count=1` if only env vars are changed and the go test CLI still runs the same cases. It's due to go test internal
 mechanism that the same built binary is used since there's no code change in between.
+
+## Background
+
+This package attempts to offload users from the golang `testing` package internal implementation details and the the ASK parsing process
+steps and enable readers to filter test cases with labels. The go testing CLI provided the `-run` and `-list` flags to filter tests via regex against the test function names. However, sometimes it's not convenient to keep long function names as the convention or only selec
+tests via the linear matching mechanism. For example, if the tests are cataloged in multiple dimensions like `TestAddByClickInDevForIntegration` and `TestAddByClickInProdForRegression`. This package is designed to provide a multiple dimension test case selector with no actual coding maintenance efforts.
+
+This small project is part of the approach to verify the generic idea that devops information could be injected without
+functional code change in all the devops stages. The gotest-labels inject testing control information into the go testing
+CLI running sessions. The author is working on other approaches to inject information to compilation steps as well.
 
 ## Contributing
 
