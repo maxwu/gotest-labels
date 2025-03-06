@@ -15,7 +15,6 @@ import (
 // the test costs or support the test operation/observability/report features.
 func MutateTestFilterByLabels() []string {
 	args := parseArgs()
-
 	tests, listMode := getTestFuncsByLabels(args)
 
 	// If the labels are not enabled, return the original tests without mutating the os.Args.
@@ -26,12 +25,7 @@ func MutateTestFilterByLabels() []string {
 	}
 
 	// If the labels are enabled, mutate the os.Args to run the selected tests.
-	funcs := []string{}
-	for _, test := range tests {
-		funcs = append(funcs, "^"+test+"$")
-	}
-	pattern := strings.Join(funcs, "|")
-
+	pattern := "^" + strings.Join(tests, "|") + "$"
 	if listMode {
 		os.Args = append(os.Args, "-test.list", pattern)
 	} else {
