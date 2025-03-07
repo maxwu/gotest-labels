@@ -11,6 +11,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+var defaultPkg = "./..."
+
 // Get go packages in "." directory since the packages and paths are actually processed earlier than
 // executing the test binaries internally by the go test command. The current package only needs to
 // take care of the current directory.
@@ -19,7 +21,7 @@ func getPackages() ([]*packages.Package, error) {
 		Mode:  packages.NeedName | packages.NeedFiles,
 		Tests: true,
 	}
-	pkgs, err := packages.Load(cfg, "./...")
+	pkgs, err := packages.Load(cfg, defaultPkg)
 
 	if err != nil {
 		return nil, fmt.Errorf("Failed to load packages: %v", err)
