@@ -171,7 +171,26 @@ Readers are kindly reminded to add `-count=1` to the CLI since there's only env 
 to rerun. Actually the test codes are rebuilt to new temporary binary file but the objective of this package is to offload
 readers from golang `testing` package internal details.
 
-### Troubleshooting
+## Limitation
+
+The test running args are mutated by updating or adding a regex to matching test function names. Which means if two test
+functions share the same name in different packages, they are either both selected or both skipped. This is due to the
+go testing package regex filter mechanism. To mitigate it, the two packages with duplicated test name shall be launched
+separately. Reader could refer to below example to select package and its sub packages in CLI.
+
+```sh
+❯ go test -v .{,/pkg1,/pkg2}
+```
+
+The above CLI will run the tests in current path and its sub paths "./pkg1" and "./pkg2" only. The other sub packages
+are skipped.
+
+Another limitation is that multiple labels are selected with logical `AND` operator. If more complicated label conditions
+are needed, the users can add a new label to preconfig the test cases explicitly. For example, if the conditions are 
+`(group=demo AND env=dev) OR (group=demo AND env=sit)`, users can add a new label `group=demo-non-prod` to include the
+demo cases in both dev and sit envs.
+
+## Troubleshooting
 
 * Add `-count=1` if only env vars are changed and the go test CLI still runs the same cases. It's due to go test internal
 mechanism that the same built binary is used since there's no code change in between.
