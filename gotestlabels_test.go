@@ -6,7 +6,7 @@ import (
 )
 
 func TestMutateTestFilterByLabels(t *testing.T) {
-	t.Run("Labels enabled", func(t *testing.T) {
+	t.Run("Labels enabled in go test list", func(t *testing.T) {
 		origArgs := os.Args
 		defer func() { os.Args = origArgs }()
 		os.Args = []string{"theBinDoesntMatter", "-test.v", "-labels", "group=demo", "-test.list=."}
@@ -46,6 +46,45 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 
 		if os.Args[4] != "^TestSimpleAlpha|TestSimpleGamma$" {
 			t.Errorf("Expected ^TestSimpleAlpha|TestSimpleGamma$, got %v", os.Args[4])
+			t.Fail()
+		}
+	})
+
+	t.Run("Labels enabled in go test run", func(t *testing.T) {
+		origArgs := os.Args
+		defer func() { os.Args = origArgs }()
+		os.Args = []string{"theBinDoesntMatter", "-test.v", "-labels", "group=demo", "-test.run=Alpha"}
+		origDefaultPkg := defaultPkg
+		defer func() { defaultPkg = origDefaultPkg }()
+
+		defaultPkg = "./examples/simple"
+
+		tests := MutateTestFilterByLabels()
+
+		t.Logf("Filtered tests: %v\n", tests)
+
+		if len(tests) != 1 {
+			t.Errorf("Expected 1 test, got %v", len(tests))
+			t.Fail()
+		}
+
+		if tests[0] != "TestSimpleAlpha" {
+			t.Errorf("Expected TestSimpleAlpha, got %v", tests[0])
+			t.Fail()
+		}
+		
+		if len(os.Args) != 5 {
+			t.Errorf("Expected 5 args after mutation, got %#v", os.Args)
+			t.Fail()
+		}
+
+		if os.Args[3] != "-test.run" {
+			t.Errorf("Expected test.list, got %v", os.Args[3])
+			t.Fail()
+		}
+
+		if os.Args[4] != "^TestSimpleAlpha$" {
+			t.Errorf("Expected ^TestSimpleAlpha$, got %v", os.Args[4])
 			t.Fail()
 		}
 	})
