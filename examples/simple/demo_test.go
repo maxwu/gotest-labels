@@ -5,7 +5,7 @@ import (
 
 	// The user testing packages only need to import the apply package to selectively
 	// run the tests with labels
-	_ "gotestlabels/apply"
+	_ "github.com/maxwu/gotest-labels/apply"
 )
 
 // @group=demo

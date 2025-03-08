@@ -14,7 +14,7 @@ Add one line of anonymous import code in the `*_test.go` source file:
 import (
     "testing"
     //...
-    _ "github.com/maxwu/gotestlabels/apply"
+    _ "github.com/maxwu/gotest-labels/apply"
 )
 ```
 
@@ -47,14 +47,16 @@ the invocation of `gotestlabels.MutateTestFuncsByLabels()` in `TestMain()` funct
 Use the simple way, only one line of anonymous import is needed:
 
 ```go
-_ "github.com/maxwu/gotestlabels/apply"
+_ "github.com/maxwu/gotest-labels/apply"
 ```
 
 With the explicit way, one line of actual code is needed in the targeted testing package's init function:
 
 ```go
+import "github.com/maxwu/gotest-labels"
+
 func init() {
-    _ = gotestlabels.MutateTestFilterByLabels()
+    _ = gotest_labels.MutateTestFilterByLabels()
 }
 ```
 
@@ -63,7 +65,7 @@ Or, if the parent package refers to a sub package underneath, here's the safe wa
 ```go
 func TestMain(m *testing.M) {
     // The returned test case lists can be used to estimate the test costs or other tasks.
-    _ = gotestlabels.MutateTestFilterByLabels()
+    _ = gotest_labels.MutateTestFilterByLabels()
     os.Exit(m.Run())
 }
 ```
