@@ -5,11 +5,11 @@ import (
 	"os"
 	"testing"
 
-	"gotestlabels"
+	"github.com/maxwu/gotest-labels"
 )
 
 func TestMain(m *testing.M) {
-	tests := gotestlabels.MutateTestFilterByLabels()
+	tests := gotest_labels.MutateTestFilterByLabels()
 	fmt.Printf("Filtered tests: %v\n", tests)
 	code := m.Run()
 	os.Exit(code)

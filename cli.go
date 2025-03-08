@@ -1,4 +1,4 @@
-package gotestlabels
+package gotest_labels
 
 import (
 	"os"

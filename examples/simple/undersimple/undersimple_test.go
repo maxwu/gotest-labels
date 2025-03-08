@@ -7,7 +7,7 @@ import (
 	// is also needed to be imported in the sub packages to activate the label filtering.
 	// Otherwise, only applied testing packages will run tests filtered by labels, the others
 	// will run all tests as defined in CLI args.
-	_ "gotestlabels/apply"
+	_ "github.com/maxwu/gotest-labels/apply"
 )
 
 func TestUnderSimpleDelta(t *testing.T) {

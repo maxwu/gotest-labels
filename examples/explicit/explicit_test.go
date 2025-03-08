@@ -3,11 +3,11 @@ package explicittestmain
 import (
 	"testing"
 
-	"gotestlabels"
+	"github.com/maxwu/gotest-labels"
 )
 
 func init() {
-	_ = gotestlabels.MutateTestFilterByLabels()
+	_ = gotest_labels.MutateTestFilterByLabels()
 }
 
 // @group=demo

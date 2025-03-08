@@ -1,4 +1,4 @@
-module gotestlabels
+module github.com/maxwu/gotest-labels
 
 go 1.24
 
