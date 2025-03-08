@@ -1,9 +1,8 @@
 # gotestlabels
 
-GoTestLabels is a tiny go package that to select test cases by labels within testing function comments.
+GoTestLabels is a a Go package that enables the selection of test cases by labels within the comments of testing functions.
 
-It is tiny with ~300 lines of code without third party dependencies. The package can be used with one line of anonymous
-import code in the testing code.
+It is a tiny package consisting of approximately 300 lines of code and has no third party dependencies. In the testing code, you can use this package with just one line of anonymous import code.
 
 ## TLDR
 
@@ -17,7 +16,7 @@ import (
 )
 ```
 
-Add labels to the test case in your `*_test.go` source file:
+Add labels to the test case code comment in your `*_test.go` file:
 
 ```go
 // @group=demo
