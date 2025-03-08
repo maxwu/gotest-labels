@@ -1,5 +1,7 @@
 # gotestlabels
 
+[![codecov](https://codecov.io/gh/maxwu/gotest-labels/graph/badge.svg?token=OASE32SSFW)](https://codecov.io/gh/maxwu/gotest-labels)
+
 GoTestLabels is a a Go package that enables the selection of test cases by labels within the comments of testing functions.
 
 It is a tiny package consisting of approximately 300 lines of code and has no third party dependencies. In the testing code, you can use this package with just one line of anonymous import code.
