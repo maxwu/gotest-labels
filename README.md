@@ -63,9 +63,12 @@ func init() {
 Or, if the parent package refers to a sub package underneath, here's the safe way:
 
 ```go
+// It's usually okay to import tooling package without identifier to simplify tests.
+import . "github.com/maxwu/gotest-labels"
+
 func TestMain(m *testing.M) {
     // The returned test case lists can be used to estimate the test costs or other tasks.
-    _ = gotest_labels.MutateTestFilterByLabels()
+    _ = MutateTestFilterByLabels()
     os.Exit(m.Run())
 }
 ```
