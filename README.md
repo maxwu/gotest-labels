@@ -1,6 +1,7 @@
 # gotest_labels
 
 [![codecov](https://codecov.io/gh/maxwu/gotest-labels/graph/badge.svg?token=OASE32SSFW)](https://codecov.io/gh/maxwu/gotest-labels)
+[![Go Report Card](https://goreportcard.com/badge/github.com/maxwu/gotest-labels)](https://goreportcard.com/report/github.com/maxwu/gotest-labels)
 
 GoTestLabels is a a Go package that enables the selection of test cases by labels within the comments of testing functions.
 
