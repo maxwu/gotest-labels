@@ -78,7 +78,7 @@ func TestEvaluate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
-			got, err := Evaluate(test.exp, test.labels)
+			node, err := ParseLabelExp(test.exp)
 			if err != nil && test.err == "" {
 				t.Errorf("Evaluate(%q) generated \"%v\", want no error", test.exp, err)
 			}
@@ -88,6 +88,8 @@ func TestEvaluate(t *testing.T) {
 				}
 				return
 			}
+
+			got := Evaluate(node, test.labels)
 			if got != test.want {
 				t.Errorf("Evaluate(%q) = %v, want %v", test.exp, got, test.want)
 			}

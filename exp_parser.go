@@ -141,9 +141,9 @@ func parseExpr(tokens []string, pos int) (Node, int, error) {
 	return left, pos, nil
 }
 
-// evaluate traverses the AST and evaluates the expression
+// Evaluate traverses the AST and evaluates the expression
 // against the provided labels. It returns true if the expression is satisfied.
-func evaluate(node Node, labels TestLabels) bool {
+func Evaluate(node Node, labels TestLabels) bool {
     switch n := node.(type) {
     case Condition:
         val, ok := labels[n.Key]
@@ -151,9 +151,9 @@ func evaluate(node Node, labels TestLabels) bool {
     case LogicalOp:
         switch n.Operator {
         case "AND":
-            return evaluate(n.Children[0], labels) && evaluate(n.Children[1], labels)
+            return Evaluate(n.Children[0], labels) && Evaluate(n.Children[1], labels)
         case "OR":
-            return evaluate(n.Children[0], labels) || evaluate(n.Children[1], labels)
+            return Evaluate(n.Children[0], labels) || Evaluate(n.Children[1], labels)
         default:
             return false
         }
@@ -181,14 +181,4 @@ func ParseLabelExp(input string) (Node, error) {
 		return nil, fmt.Errorf("unexpected token %s at position %d", tokens[pos], pos)
 	}
 	return node, nil
-}
-
-// Evaluate is the entry point for evaluating labels against the input expression.
-// e.g. Evaluate("env=dev&&group=demo", TestLabels{"env": "dev", "group": "demo"})
-func Evaluate(input string, labels TestLabels) (bool, error) {
-	node, err := ParseLabelExp(input)
-	if err != nil {
-		return false, err
-	}
-	return evaluate(node, labels), nil
 }
