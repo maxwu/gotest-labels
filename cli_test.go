@@ -14,7 +14,7 @@ func TestNewCliArgs(t *testing.T) {
 		return
 	}
 
-	if len(args.labels) != 1 || args.labels != "group=demo" {
+	if args.labels != "group=demo" {
 		t.Errorf("NewCliArgs() failed, expected group=demo but found %#v", args.labels)
 		t.Fail()
 	}
