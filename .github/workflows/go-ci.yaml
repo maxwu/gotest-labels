@@ -18,6 +18,12 @@ jobs:
       with:
         go-version-file: 'go.mod'
 
+    - name: Lint
+      uses: golangci/golangci-lint-action@v7
+      with:
+        version: latest
+        args: --timeout 1m
+
     - name: Test
       run: |
         go test -v -count=1 ./... -coverprofile=coverage.txt
