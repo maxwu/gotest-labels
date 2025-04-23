@@ -4,7 +4,7 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxwu/gotest-labels)](https://goreportcard.com/report/github.com/maxwu/gotest-labels)
 
 GoTestLabels is a Go package that enables the selection of test cases by labels within the comments of testing functions. The filter
-expression is based on the `labelKey=value` format, `||`, `&&` and parenthesis are supported.
+expression is based on the `labelKey=value` format, `||`, `&&`, `!` and parenthesis are supported.
 
 ## Key Features
 
@@ -95,6 +95,8 @@ Or, if all the packages under test are equipted with the gotestlabels, the label
 go test -v -labels="group=demo" ./examples/simple/...
 ```
 
+`&&`, `||`, `!` and parenthesis are supported in the label filter expression, e.g. `TEST_LABELS='!group=demo&&env=integration'`.
+
 ### Compatibility
 
 If there's no `TEST_LABELS` var or `-labels` flag passed in, the package will do nothing and go test runs normally.
@@ -151,7 +153,7 @@ PASS
 ok  	gotestlabels/examples/simple	0.267s
 ```
 
-The filter expression supports `&&`, `||` and parenthesis. For example, the below OR condition selects 3 cases:
+The filter expression supports `&&`, `||`, `!` and parenthesis. For example, the below OR condition selects 3 cases:
 
 ```sh
 ❯ go test -v ./examples/simple  -labels "group=demo||env=dev"
@@ -215,6 +217,13 @@ are skipped.
 
 * Add `-count=1` if only env vars are changed and the go test CLI still runs the same cases. It's due to go test internal
 mechanism that the same built binary is used since there's no code change in between.
+
+* When using `!` as `NOT` operator, the expression shall be enclosed in single quotation marks to avoid being parsed as 
+history expansion.
+
+```sh
+❯ go test -v -labels='!group=demo'
+```
 
 ## Background
 

@@ -139,6 +139,9 @@ func getFuncLabels(fn *ast.FuncDecl) TestLabels {
 				key := strings.TrimSpace(parts[0])
 				value := strings.TrimSpace(parts[1])
 				tags[key] = value
+			} else {
+				key := strings.TrimSpace(parts[0])
+				tags[key] = "true"
 			}
 		}
 	}

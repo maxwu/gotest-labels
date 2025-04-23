@@ -54,10 +54,15 @@ func TestEvaluate(t *testing.T) {
 			labels: TestLabels{"env": "dev", "group": "demo"},
 			want:   true,
 		},
-		"AND condition": {
+		"AND condition - positive": {
 			exp:    "env=dev&&group=demo",
 			labels: TestLabels{"env": "dev", "group": "demo", "integration": "true"},
 			want:   true,
+		},
+		"AND condition - negative": {
+			exp:    "env=dev&&group=demo",
+			labels: TestLabels{"env": "dev", "group": "prod", "integration": "true"},
+			want:   false,
 		},
 		"OR condition": {
 			exp:    "env=dev||group=demo",
@@ -72,6 +77,26 @@ func TestEvaluate(t *testing.T) {
 		"OR condition with Parentheses - 2": {
 			exp:    "(env=dev||env=int)&&group=demo",
 			labels: TestLabels{"env": "int", "group": "demo"},
+			want:   true,
+		},
+		"NOT condition - positive - 1 missing": {
+			exp:    "!env=dev",
+			labels: TestLabels{"group": "prod"},
+			want:   true,
+		},
+		"NOT condition - positive - 2 mismatching": {
+			exp:    "!env=dev",
+			labels: TestLabels{"dev": "prod"},
+			want:   true,
+		},
+		"NOT condition - positive - 1 brackets": {
+			exp:    "!(env=dev)",
+			labels: TestLabels{"env": "somthing-else", "key": "dev"},
+			want:   true,
+		},
+		"Combined conditions - 1": {
+			exp:    "!env=dev&&group=demo",
+			labels: TestLabels{"group": "demo", "env": "prod"},
 			want:   true,
 		},
 	}
