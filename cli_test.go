@@ -10,11 +10,12 @@ func TestNewCliArgs(t *testing.T) {
 	// Test NewCliArgs
 	args := NewCliArgs()
 	if args == nil {
-		t.Errorf("NewCliArgs() failed")
-		t.Fail()
+		t.Fatalf("NewCliArgs() failed: args is nil")
+		return
 	}
-	if len(args.labels) != 1 || args.labels["group"] != "demo" {
-		t.Errorf("NewCliArgs() failed, expected map{group: demo} but found %#v", args.labels)
+
+	if args.labels != "group=demo" {
+		t.Errorf("NewCliArgs() failed, expected group=demo but found %#v", args.labels)
 		t.Fail()
 	}
 }

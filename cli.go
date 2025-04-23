@@ -1,47 +1,55 @@
 package gotest_labels
 
 import (
+	"fmt"
 	"os"
 	"regexp"
 	"strings"
 )
 
-type TestLabels map[string]string
-
 type cliArgs struct {
-	runRegex *regexp.Regexp
-	listMode bool
-	labels   TestLabels
+	runRegex *regexp.Regexp  // The regex pattern for -run or -list
+	listMode bool  // Whether the -list flag is used
+	labels   string // The labels filter from the -labels flag or TEST_LABELS env variable
+	labelsAST Node // The parsed AST of the labels filter
 }
 
 func (c *cliArgs) labelsEnabled() bool {
-	return len(c.labels) > 0
+	return c.labels != "" && c.labelsAST != nil
+}
+
+func (c *cliArgs) buildLabelsAST() {
+	if c.labels == "" {
+		c.labelsAST = nil
+		return
+	}
+	ast, err := ParseLabelExp(c.labels)
+	if err != nil {
+		fmt.Println("Error parsing label expression:", err)
+	} else {
+		c.labelsAST = ast
+	}
 }
 
 func NewCliArgs() *cliArgs {
 	cliArgs := &cliArgs{
-		labels: make(TestLabels),
+		labels: os.Getenv("TEST_LABELS"),
 	}
-	testLabels := os.Getenv("TEST_LABELS")
-	if testLabels != "" {
-		pairs := strings.SplitSeq(testLabels, ",")
-		for pair := range pairs {
-			parts := strings.SplitN(pair, "=", 2)
-			if len(parts) == 2 {
-				cliArgs.labels[parts[0]] = parts[1]
-			}
-		}
-	}
+	cliArgs.buildLabelsAST()
 	return cliArgs
 }
 
-// Parse the go test CLI -run, -list, -json and the new added -labels flags.
-func parseArgs() *cliArgs {
+// Parse the os.Args for -run, -list, -json and the new added -labels flags in go test command.
+func ParseOSArgs() *cliArgs {
 	defer removeLabelFlags()
 
+	return parseArgs(os.Args)
+}
+
+func parseArgs(osArgs []string) *cliArgs {
 	cliArgs := NewCliArgs()
 	runPattern := ""
-	args := os.Args[1:]
+	args := osArgs[1:]
 
 	for i := 0; i < len(args); i++ {
 		arg := args[i]
@@ -70,13 +78,10 @@ func parseArgs() *cliArgs {
 			continue
 		}
 
-		// -labels flag is merged up with values from TEST_LABELS env var
+		// -labels flag overwrites the values from TEST_LABELS env var
 		if arg == "-labels" && i+1 < len(args) {
-			pair := args[i+1]
-			parts := strings.SplitN(pair, "=", 2)
-			if len(parts) == 2 {
-				cliArgs.labels[parts[0]] = parts[1]
-			}
+			filter := args[i+1]
+			cliArgs.labels = filter
 			i++
 		}
 	}
@@ -85,18 +90,24 @@ func parseArgs() *cliArgs {
 		cliArgs.runRegex = regexp.MustCompile(runPattern)
 	}
 
+	cliArgs.buildLabelsAST()
+
 	return cliArgs
 }
 
 // Remove the -labels flag from os.Args after parsing it. This flag isn't a std go test flag.
 func removeLabelFlags() {
-	var newArgs []string
-	for i := 0; i < len(os.Args); i++ {
-		if os.Args[i] == "-labels" {
-			i++ // 跳过值
+	os.Args = removeLabelFlagsFromArgs(os.Args)
+}
+
+func removeLabelFlagsFromArgs(args []string) []string {
+	newArgs := make([]string, 0, len(args))
+	for i := 0; i < len(args); i++ {
+		if args[i] == "-labels" {
+			i++
 			continue
 		}
-		newArgs = append(newArgs, os.Args[i])
+		newArgs = append(newArgs, args[i])
 	}
-	os.Args = newArgs
+	return newArgs
 }

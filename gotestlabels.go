@@ -6,6 +6,8 @@ import (
 	"strings"
 )
 
+type TestLabels map[string]string
+
 // The actually exposed entrypoint to mutate the test functions by labels
 // It can be called in the TestMain function of the test package.
 // If the test command is running tests with wildcards for sub packages, either set the labels
@@ -14,7 +16,7 @@ import (
 // The function returns the list of test functions that matched the labels as well. The result can be used to estimate
 // the test costs or support the test operation/observability/report features.
 func MutateTestFilterByLabels() []string {
-	args := parseArgs()
+	args := ParseOSArgs()
 	tests, listMode := getTestFuncsByLabels(args)
 
 	// If the labels are not enabled, return the original tests without mutating the os.Args.
@@ -47,7 +49,7 @@ func getTestFuncsByLabels(args *cliArgs) ([]string, bool) {
 	var allTestFuncs []string
 	for _, pkg := range allPkgs {
 		files := getTestFiles(pkg)
-		funcs, err := FindTestFuncs(files, args.labels)
+		funcs, err := FindTestFuncs(files, args.labelsAST)
 		if err != nil {
 			log.Printf("Error parsing tests %s: : %#v", pkg.Name, err)
 			return nil, args.listMode

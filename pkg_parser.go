@@ -24,7 +24,7 @@ func getPackages() ([]*packages.Package, error) {
 	pkgs, err := packages.Load(cfg, defaultPkg)
 
 	if err != nil {
-		return nil, fmt.Errorf("Failed to load packages: %v", err)
+		return nil, fmt.Errorf("failed to load packages: %v", err)
 	}
 
 	// Filter out packages without go files
@@ -52,14 +52,14 @@ func getTestFiles(pkg *packages.Package) []string {
 }
 
 // Find all Test* functions with (t *testing.T) signature and matching the labels in the given test files
-func FindTestFuncs(testFiles []string, labels TestLabels) ([]string, error) {
+func FindTestFuncs(testFiles []string, filterAST Node) ([]string, error) {
 	var funcNames []string
 	fset := token.NewFileSet()
 
 	for _, file := range testFiles {
 		f, err := parser.ParseFile(fset, file, nil, parser.ParseComments)
 		if err != nil {
-			return nil, fmt.Errorf("Failed to parse %s, err: %v", file, err)
+			return nil, fmt.Errorf("failed to parse %s, err: %v", file, err)
 		}
 
 		for _, decl := range f.Decls {
@@ -72,7 +72,7 @@ func FindTestFuncs(testFiles []string, labels TestLabels) ([]string, error) {
 				continue
 			}
 
-			if !isMatchedTestFunc(fn, labels) {
+			if !isMatchedTestFunc(fn, filterAST) {
 				continue
 			}
 			funcNames = append(funcNames, fn.Name.Name)
@@ -108,22 +108,18 @@ func filterTestFuncs(funcs []string, regex *regexp.Regexp) []string {
 }
 
 // Check if the test function has matched labels in the comments
-// If multiple labels are required, all of them must be satisfied
-func isMatchedTestFunc(fn *ast.FuncDecl, labels TestLabels) bool {
-	if len(labels) == 0 {
+func isMatchedTestFunc(fn *ast.FuncDecl, filterAST Node) bool {
+	// If no labels are specified, all test functions are matched
+	if filterAST == nil {
 		return true
 	}
-	tags := getFuncLabels(fn)
 
-	// All required labels must be satisfied
-	for key, value := range labels {
-		if tags[key] != value {
-			return false
-		}
-	}
-	return true
+	labels := getFuncLabels(fn)
+
+	return Evaluate(filterAST, labels)
 }
 
+// Get the labels from the function comments
 func getFuncLabels(fn *ast.FuncDecl) TestLabels {
 	tags := make(TestLabels)
 	if fn.Doc == nil {
@@ -143,6 +139,9 @@ func getFuncLabels(fn *ast.FuncDecl) TestLabels {
 				key := strings.TrimSpace(parts[0])
 				value := strings.TrimSpace(parts[1])
 				tags[key] = value
+			} else {
+				key := strings.TrimSpace(parts[0])
+				tags[key] = "true"
 			}
 		}
 	}

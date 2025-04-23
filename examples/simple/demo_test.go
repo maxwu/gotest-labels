@@ -21,6 +21,7 @@ func TestSimpleBeta(t *testing.T) {
 }
 
 // @group=demo
+// @env=prod
 func TestSimpleGamma(t *testing.T) {
 	t.Log("Testing examples.simple.TestSimpleGamma")
 }

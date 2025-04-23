@@ -3,7 +3,8 @@
 [![codecov](https://codecov.io/gh/maxwu/gotest-labels/graph/badge.svg?token=OASE32SSFW)](https://codecov.io/gh/maxwu/gotest-labels)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxwu/gotest-labels)](https://goreportcard.com/report/github.com/maxwu/gotest-labels)
 
-GoTestLabels is a a Go package that enables the selection of test cases by labels within the comments of testing functions.
+GoTestLabels is a Go package that enables the selection of test cases by labels within the comments of testing functions. The filter
+expression is based on the `labelKey=value` format, `||`, `&&`, `!` and parenthesis are supported.
 
 ## Key Features
 
@@ -80,7 +81,7 @@ Users can refer to the [examples](examples) to see how to use the package with o
 
 To add labels to your test cases, add a comment to the test function in `@key=value` format. Double slash or slash start are both supported.
 
-### Run Go Test with labels
+### Run Go Test with filter expression
 
 Using env variable `TEST_LABELS` to specify the labels to run.
 
@@ -93,6 +94,8 @@ Or, if all the packages under test are equipted with the gotestlabels, the label
 ```sh
 go test -v -labels="group=demo" ./examples/simple/...
 ```
+
+`&&`, `||`, `!` and parenthesis are supported in the label filter expression, e.g. `TEST_LABELS='!group=demo&&env=integration'`.
 
 ### Compatibility
 
@@ -115,6 +118,7 @@ import (
     _ "github.com/maxwu/gotestlabels/apply"
 )
 
+// Add labels to the test function code comment. These labels can be evaluated with conditional expression from filter.
 // @group=demo
 func TestExample(t *testing.T) {
     t.Log("Testing yourpackage.TestExample")
@@ -147,6 +151,23 @@ only the TestSimpleAlpha and TestSimpleGamma cases are run and the TestSimpleBet
 --- PASS: TestSimpleGamma (0.00s)
 PASS
 ok  	gotestlabels/examples/simple	0.267s
+```
+
+The filter expression supports `&&`, `||`, `!` and parenthesis. For example, the below OR condition selects 3 cases:
+
+```sh
+❯ go test -v ./examples/simple  -labels "group=demo||env=dev"
+=== RUN   TestSimpleAlpha
+    demo_test.go:13: Testing examples.simple.TestSimpleAlpha
+--- PASS: TestSimpleAlpha (0.00s)
+=== RUN   TestSimpleBeta
+    demo_test.go:20: Testing examples.simple.TestSimpleBeta
+--- PASS: TestSimpleBeta (0.00s)
+=== RUN   TestSimpleGamma
+    demo_test.go:26: Testing examples.simple.TestSimpleGamma
+--- PASS: TestSimpleGamma (0.00s)
+PASS
+ok  	github.com/maxwu/gotest-labels/examples/simple	0.270s
 ```
 
 Or, users can list the test cases with labels.
@@ -192,15 +213,17 @@ separately. Reader could refer to below example to select package and its sub pa
 The above CLI will run the tests in current path and its sub paths "./pkg1" and "./pkg2" only. The other sub packages
 are skipped.
 
-Another limitation is that multiple labels are selected with logical `AND` operator. If more complicated label conditions
-are needed, the users can add a new label to preconfig the test cases explicitly. For example, if the conditions are 
-`(group=demo AND env=dev) OR (group=demo AND env=sit)`, users can add a new label `group=demo-non-prod` to include the
-demo cases in both dev and sit envs.
-
 ## Troubleshooting
 
 * Add `-count=1` if only env vars are changed and the go test CLI still runs the same cases. It's due to go test internal
 mechanism that the same built binary is used since there's no code change in between.
+
+* When using `!` as `NOT` operator, the expression shall be enclosed in single quotation marks to avoid being parsed as 
+history expansion.
+
+```sh
+❯ go test -v -labels='!group=demo'
+```
 
 ## Background
 
@@ -219,3 +242,10 @@ Contributions are welcome! Please feel free to submit a pull request or open an 
 ## License
 
 This project is licensed under the Apache License 2.0. See the LICENSE file for details.
+
+Copyright [2025] [Max Wu]
+​
+  Licensed under the Apache License, Version 2.0 (the "License");
+  you may not use this file except in compliance with the License.
+  You may obtain a copy of the License at
+  http://www.apache.org/licenses/LICENSE-2.0
