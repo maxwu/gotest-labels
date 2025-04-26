@@ -33,7 +33,7 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Errorf("Expected TestSimpleGamma, got %v", tests[1])
 			t.Fail()
 		}
-		
+
 		if len(os.Args) != 5 {
 			t.Errorf("Expected 5 args after mutation, got %#v", os.Args)
 			t.Fail()
@@ -72,7 +72,7 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Errorf("Expected TestSimpleAlpha, got %v", tests[0])
 			t.Fail()
 		}
-		
+
 		if len(os.Args) != 5 {
 			t.Errorf("Expected 5 args after mutation, got %#v", os.Args)
 			t.Fail()
@@ -98,7 +98,7 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 		defaultPkg = "./examples/simple"
 		tests := MutateTestFilterByLabels()
 		t.Logf("Filtered tests: %v\n", tests)
-		if len(tests)!= 3 {
+		if len(tests) != 3 {
 			t.Errorf("Expected 3 tests, got %v", len(tests))
 			t.Fail()
 		}
@@ -114,9 +114,9 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Errorf("Expected TestSimpleGamma, got %v", tests[2])
 			t.Fail()
 		}
-		if len(os.Args)!= 3 {
+		if len(os.Args) != 3 {
 			t.Errorf("Expected 3 args after mutation, got %#v", os.Args)
-			t.Fail()	
+			t.Fail()
 		}
 	})
 }

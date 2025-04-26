@@ -8,10 +8,10 @@ import (
 )
 
 type cliArgs struct {
-	runRegex *regexp.Regexp  // The regex pattern for -run or -list
-	listMode bool  // Whether the -list flag is used
-	labels   string // The labels filter from the -labels flag or TEST_LABELS env variable
-	labelsAST Node // The parsed AST of the labels filter
+	runRegex  *regexp.Regexp // The regex pattern for -run or -list
+	listMode  bool           // Whether the -list flag is used
+	labels    string         // The labels filter from the -labels flag or TEST_LABELS env variable
+	labelsAST Node           // The parsed AST of the labels filter
 }
 
 func (c *cliArgs) labelsEnabled() bool {

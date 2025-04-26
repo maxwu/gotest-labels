@@ -5,6 +5,78 @@ import (
 	"testing"
 )
 
+func TestTokenize(t *testing.T) {
+	tests := map[string]struct {
+		exp  string
+		want []string
+	}{
+		"empty": {
+			exp:  "",
+			want: []string{},
+		},
+		"single condition": {
+			exp:  "key=value",
+			want: []string{"key=value"},
+		},
+		"AND condition": {
+			exp:  "key=value&&key2=value2",
+			want: []string{"key=value", "&&", "key2=value2"},
+		},
+		"OR condition": {
+			exp:  "key=value||key2=value2",
+			want: []string{"key=value", "||", "key2=value2"},
+		},
+		"mixed condition": {
+			exp:  "key=value&&key2=value2||key3=value3",
+			want: []string{"key=value", "&&", "key2=value2", "||", "key3=value3"},
+		},
+		"parentheses": {
+			exp:  "(key=value&&key2=value2)||key3=value3",
+			want: []string{"(", "key=value", "&&", "key2=value2", ")", "||", "key3=value3"},
+		},
+		"nested parentheses": {
+			exp:  "((key=value&&key2=value2)||key3=value3)&&key4=value4",
+			want: []string{"(", "(", "key=value", "&&", "key2=value2", ")", "||", "key3=value3", ")", "&&", "key4=value4"},
+		},
+		"complex expression": {
+			exp:  "((key=value&&key2=value2)||key3=value3)&&((key4=value4||key5=value5)&&key6=value6)",
+			want: []string{"(", "(", "key=value", "&&", "key2=value2", ")", "||", "key3=value3", ")", "&&", "(", "(", "key4=value4", "||", "key5=value5", ")", "&&", "key6=value6", ")"},
+		},
+		"spaces around operators": {
+			exp:  "key=value && key2=value2 || key3=value3",
+			want: []string{"key=value", "&&", "key2=value2", "||", "key3=value3"},
+		},
+		"spaces around parentheses": {
+			exp: " ( key=value && key2=value2 ) || key3=value3 ",
+			want: []string{"(", "key=value", "&&", "key2=value2",
+				")", "||", "key3=value3"},
+		},
+		"spaces around conditions": {
+			exp:  " key = value && key2 = value2 || key3 = value3 ",
+			want: []string{"key", "=", "value", "&&", "key2", "=", "value2", "||", "key3", "=", "value3"},
+		},
+		"spaces around operators and parentheses": {
+			exp:  " ( key = value && key2 = value2 ) || key3 = value3 ",
+			want: []string{"(", "key", "=", "value", "&&", "key2", "=", "value2", ")", "||", "key3", "=", "value3"},
+		},
+	}
+
+	for name, test := range tests {
+		t.Run(name, func(t *testing.T) {
+			got := tokenize(test.exp)
+			if len(got) != len(test.want) {
+				t.Errorf("tokenize(%q) returned %#v, want %#v", test.exp, got, test.want)
+				return
+			}
+			for i := range got {
+				if got[i] != test.want[i] {
+					t.Errorf("tokenize(%q)[%d] returned %#v, want %#v", test.exp, i, got[i], test.want[i])
+				}
+			}
+		})
+	}
+}
+
 func TestParseLabelExp(t *testing.T) {
 	tests := map[string]struct {
 		exp  string
