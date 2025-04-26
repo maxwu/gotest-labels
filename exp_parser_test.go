@@ -26,13 +26,17 @@ func TestTokenize(t *testing.T) {
 			exp:  "key=value||key2=value2",
 			want: []string{"key=value", "||", "key2=value2"},
 		},
+		"NOT condition": {
+			exp:  "!key=value",
+			want: []string{"!", "key=value"},
+		},
 		"mixed condition": {
 			exp:  "key=value&&key2=value2||key3=value3",
 			want: []string{"key=value", "&&", "key2=value2", "||", "key3=value3"},
 		},
 		"parentheses": {
-			exp:  "(key=value&&key2=value2)||key3=value3",
-			want: []string{"(", "key=value", "&&", "key2=value2", ")", "||", "key3=value3"},
+			exp:  "(key=value&&key2=value2)||!key3=value3",
+			want: []string{"(", "key=value", "&&", "key2=value2", ")", "||", "!", "key3=value3"},
 		},
 		"nested parentheses": {
 			exp:  "((key=value&&key2=value2)||key3=value3)&&key4=value4",
