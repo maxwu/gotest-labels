@@ -8,7 +8,7 @@ on:
 
 jobs:
 
-  build:
+  lint-n-test:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -33,5 +33,5 @@ jobs:
       uses: codecov/codecov-action@v5
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
-        file: ./coverage.txt
+        files: ./coverage.txt
         flags: unittests
