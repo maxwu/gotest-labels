@@ -102,6 +102,30 @@ func TestNewCliArgs(t *testing.T) {
 			t.Fail()
 		}
 	})
+
+	t.Run("CLI flag with equal sign and single quote signs", func(t *testing.T) {
+		t.Setenv("TEST_LABELS", "group=demo")
+		args := parseArgs([]string{"theBinDoesntMatter.test", `-labels='group=cliFlag'`})
+		if args == nil {
+			t.Fatalf("NewCliArgs() failed: args shall not be nil")
+			return
+		}
+
+		if args.labels != "group=cliFlag" {
+			t.Errorf("NewCliArgs() failed, expected group=cliFlag but found %#v", args.labels)
+			t.Fail()
+		}
+
+		if !args.labelsEnabled() {
+			t.Errorf("NewCliArgs() failed, expected labelsEnabled to be true")
+			t.Fail()
+		}
+
+		if args.labelsAST == nil {
+			t.Errorf("NewCliArgs() failed, expected labelsAST to be not nil")
+			t.Fail()
+		}
+	})
 }
 
 func TestRemoveLabelFlagsFromArgsWithoutEqualSign(t *testing.T) {

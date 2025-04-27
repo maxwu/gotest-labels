@@ -57,7 +57,7 @@ func TestFilterTestFuncs(t *testing.T) {
 			if len(result) != len(tt.expected) {
 				t.Errorf("expected %v, got %v", tt.expected, result)
 			}
-			for key:= range tt.expected {
+			for key := range tt.expected {
 				if result[key] == nil {
 					t.Errorf("expected %v key", key)
 				}
