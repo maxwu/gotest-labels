@@ -8,10 +8,10 @@ import (
 )
 
 type cliArgs struct {
-	runRegex *regexp.Regexp  // The regex pattern for -run or -list
-	listMode bool  // Whether the -list flag is used
-	labels   string // The labels filter from the -labels flag or TEST_LABELS env variable
-	labelsAST Node // The parsed AST of the labels filter
+	runRegex  *regexp.Regexp // The regex pattern for -run or -list
+	listMode  bool           // Whether the -list flag is used
+	labels    string         // The labels filter from the -labels flag or TEST_LABELS env variable
+	labelsAST Node           // The parsed AST of the labels filter
 }
 
 func (c *cliArgs) labelsEnabled() bool {
@@ -83,6 +83,15 @@ func parseArgs(osArgs []string) *cliArgs {
 			filter := args[i+1]
 			cliArgs.labels = filter
 			i++
+		} else if strings.HasPrefix(arg, `-labels="`) && strings.HasSuffix(arg, `"`) {
+			filter := strings.TrimPrefix(strings.TrimSuffix(arg, `"`), `-labels="`)
+			cliArgs.labels = filter
+		} else if strings.HasPrefix(arg, "-labels='") && strings.HasSuffix(arg, "'") {
+			filter := strings.TrimPrefix(strings.TrimSuffix(arg, "'"), "-labels='")
+			cliArgs.labels = filter
+		} else if strings.HasPrefix(arg, "-labels=") {
+			filter := strings.TrimPrefix(arg, "-labels=")
+			cliArgs.labels = filter
 		}
 	}
 
@@ -105,6 +114,9 @@ func removeLabelFlagsFromArgs(args []string) []string {
 	for i := 0; i < len(args); i++ {
 		if args[i] == "-labels" {
 			i++
+			continue
+		}
+		if strings.HasPrefix(args[i], "-labels=") {
 			continue
 		}
 		newArgs = append(newArgs, args[i])

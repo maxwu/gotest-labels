@@ -11,6 +11,8 @@ import (
 	"golang.org/x/tools/go/packages"
 )
 
+const DefaultLabelValue = "true"
+
 var defaultPkg = "./..."
 
 // Get go packages in "." directory since the packages and paths are actually processed earlier than
@@ -51,9 +53,10 @@ func getTestFiles(pkg *packages.Package) []string {
 	return testFiles
 }
 
-// Find all Test* functions with (t *testing.T) signature and matching the labels in the given test files
-func FindTestFuncs(testFiles []string, filterAST Node) ([]string, error) {
-	var funcNames []string
+// Find all Test* functions with (t *testing.T) signature and matching the label filter in given test files
+// It returns a map of function names to their labels
+func FindTestFuncs(testFiles []string, filterAST Node) (map[string]TestLabels, error) {
+	testFuncs := map[string]TestLabels{}
 	fset := token.NewFileSet()
 
 	for _, file := range testFiles {
@@ -72,13 +75,15 @@ func FindTestFuncs(testFiles []string, filterAST Node) ([]string, error) {
 				continue
 			}
 
-			if !isMatchedTestFunc(fn, filterAST) {
+			labels := getFuncLabels(fn)
+			if !Evaluate(filterAST, labels) {
 				continue
 			}
-			funcNames = append(funcNames, fn.Name.Name)
+
+			testFuncs[fn.Name.Name] = labels
 		}
 	}
-	return funcNames, nil
+	return testFuncs, nil
 }
 
 // Check function signature is func Test*(t *testing.T)
@@ -94,29 +99,17 @@ func isValidTestFunc(fn *ast.FuncDecl) bool {
 	return ok && sel.Sel.Name == "T"
 }
 
-func filterTestFuncs(funcs []string, regex *regexp.Regexp) []string {
+func filterTestFuncs(funcs map[string]TestLabels, regex *regexp.Regexp) map[string]TestLabels {
 	if regex == nil {
 		return funcs
 	}
-	var matched []string
-	for _, name := range funcs {
+	matched := make(map[string]TestLabels)
+	for name, labels := range funcs {
 		if regex.MatchString(name) {
-			matched = append(matched, name)
+			matched[name] = labels
 		}
 	}
 	return matched
-}
-
-// Check if the test function has matched labels in the comments
-func isMatchedTestFunc(fn *ast.FuncDecl, filterAST Node) bool {
-	// If no labels are specified, all test functions are matched
-	if filterAST == nil {
-		return true
-	}
-
-	labels := getFuncLabels(fn)
-
-	return Evaluate(filterAST, labels)
 }
 
 // Get the labels from the function comments
@@ -141,7 +134,7 @@ func getFuncLabels(fn *ast.FuncDecl) TestLabels {
 				tags[key] = value
 			} else {
 				key := strings.TrimSpace(parts[0])
-				tags[key] = "true"
+				tags[key] = DefaultLabelValue
 			}
 		}
 	}

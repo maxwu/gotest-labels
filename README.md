@@ -3,24 +3,24 @@
 [![codecov](https://codecov.io/gh/maxwu/gotest-labels/graph/badge.svg?token=OASE32SSFW)](https://codecov.io/gh/maxwu/gotest-labels)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxwu/gotest-labels)](https://goreportcard.com/report/github.com/maxwu/gotest-labels)
 
-GoTestLabels is a Go package that enables the selection of test cases by labels within the comments of testing functions. The filter
-expression is based on the `labelKey=value` format, `||`, `&&`, `!` and parenthesis are supported.
+GoTestLabels enables the selection of test cases by labels from the testing function comments. The filter expression is based on the `labelKey=value` format, `||`, `&&`, `!` and parenthesis are supported. It is a tiny Go package with less than 1k NSCL go source code
+and no third party dependencies so it's easy to be equipped in any golang projects or testing frameworks.
 
-## Key Features
+## Quick Start
 
-It is a tiny package consisting of approximately 300 lines of code and has no third party dependencies. In the testing code, you can use this package with just one line of anonymous import code.
+### Equip Your Golang Package
 
-Add one line of anonymous import code in the `*_test.go` source file:
+In the testing code, you can use this package with just one line of anonymous import code. Add one line of anonymous import code
+in one of the `*_test.go` source file:
 
 ```go
 import (
     "testing"
-    //...
     _ "github.com/maxwu/gotest-labels/apply"
 )
 ```
 
-Add labels to the test case code comment in your `*_test.go` file:
+Add labels to classify test functions (including the test functions in other `*_test.go` files in the same package or its sub packages):
 
 ```go
 // @group=demo
@@ -30,10 +30,14 @@ func TestExample(t *testing.T) {
 }
 ```
 
-Run the test with label selector, multiple label conditions are combined with logical `AND`:
+### Test Your Golang Package with Label Filter
+
+Run the test with label filter, multiple label conditions can be combined using `&&`, `||`, `!` and parenthesis.
 
 ```sh
-go test -v -labels="group=demo" -count=1 ./examples/simple/...
+TEST_LABELS='group=demo&&!(env=prod)' go test -v -count=1 ./examples/simple/...
+# Or, if only the pointed package is launched to test, the CLI flag can be used:
+go test -v -count=1 ./examples/simple -labels="group=demo&&!(env=prod)"
 ```
 
 ## Usage
@@ -81,18 +85,30 @@ Users can refer to the [examples](examples) to see how to use the package with o
 
 To add labels to your test cases, add a comment to the test function in `@key=value` format. Double slash or slash start are both supported.
 
+If a key in function comment has no value, it's treated as a boolean true and matching condition `key=true`.
+
+```go
+// @group=demo
+// @env=dev
+// @regression  It is treated as `@regression=true`
+func TestExample(t *testing.T) {
+    //...
+}
+```
+
 ### Run Go Test with filter expression
 
-Using env variable `TEST_LABELS` to specify the labels to run.
+The test label filter can be specified in env var or CLI args. The CLI args will overwrite env var if both are present and CLI args
+request all the launched packages to be equipped with gotest-labels via importing or TestMain call.
+
+Using env variable `TEST_LABELS` to specify the labels to run. If sub packages are also equipped with gotest-labels, which means
+for each involved sub package, the `gotest-labels` package is imported by at least one test source file, then the CLI flag `-labels`
+can be appended to the end of `go test` command to replace the `TEST_LABELS` env var.
 
 ```sh
 TEST_LABELS="group=demo" go test -v ./examples/simple/...
-```
-
-Or, if all the packages under test are equipted with the gotestlabels, the labels can be passed in CLI:
-
-```sh
-go test -v -labels="group=demo" ./examples/simple/...
+# Or, if sub packages are equipped with gotest-labels pkg,
+go test -v ./examples/simple/... -labels "group=demo"
 ```
 
 `&&`, `||`, `!` and parenthesis are supported in the label filter expression, e.g. `TEST_LABELS='!group=demo&&env=integration'`.
@@ -222,8 +238,12 @@ mechanism that the same built binary is used since there's no code change in bet
 history expansion.
 
 ```sh
-❯ go test -v -labels='!group=demo'
+❯ go test -v ./examples/simple/...  -labels '!group=demo'
 ```
+
+* If it's expected to select test cases in the current package and all the sub packages, the sub packages shall also be
+equipped with the gotestlabels, e.g. by adding `_ "github.com/maxwu/gotest-labels/apply"` in one `*_test.go` file for
+each sub package. For one package, it's only needed in one test source file.
 
 ## Background
 

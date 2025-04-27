@@ -32,7 +32,7 @@ type LogicalOp struct {
 	Children []Node
 }
 
-func tokenize(input string) ([]string, error) {
+func tokenize(input string) []string {
 	var tokens []string
 	runes := []rune(input)
 	n := len(runes)
@@ -40,6 +40,16 @@ func tokenize(input string) ([]string, error) {
 	buffer := make([]rune, 0, n)
 
 	for i < n {
+		// Skip whitespace
+		if runes[i] == ' ' {
+			if len(buffer) > 0 {
+				tokens = append(tokens, string(buffer))
+				buffer = buffer[:0]
+			}
+			i++
+			continue
+		}
+
 		if i+1 < n && runes[i] == '&' && runes[i+1] == '&' {
 			if len(buffer) > 0 {
 				tokens = append(tokens, string(buffer))
@@ -63,11 +73,11 @@ func tokenize(input string) ([]string, error) {
 			i++
 		} else if runes[i] == '!' {
 			if len(buffer) > 0 {
-                tokens = append(tokens, string(buffer))
-                buffer = buffer[:0]
-            }
-            tokens = append(tokens, "!")
-            i++
+				tokens = append(tokens, string(buffer))
+				buffer = buffer[:0]
+			}
+			tokens = append(tokens, "!")
+			i++
 		} else {
 			buffer = append(buffer, runes[i])
 			i++
@@ -77,7 +87,7 @@ func tokenize(input string) ([]string, error) {
 	if len(buffer) > 0 {
 		tokens = append(tokens, string(buffer))
 	}
-	return tokens, nil
+	return tokens
 }
 
 func parseFactor(tokens []string, pos int) (Node, int, error) {
@@ -94,17 +104,17 @@ func parseFactor(tokens []string, pos int) (Node, int, error) {
 			return nil, pos, fmt.Errorf("expected closing bracket")
 		}
 		return node, newPos + 1, nil
-	}  else if token == "!" {
-        // Parse NOT operator
-        child, newPos, err := parseFactor(tokens, pos+1)
-        if err != nil {
-            return nil, pos, err
-        }
-        return LogicalOp{
-            Operator: "NOT",
-            Children: []Node{child},
-        }, newPos, nil
-    } else if strings.Contains(token, "=") {
+	} else if token == "!" {
+		// Parse NOT operator
+		child, newPos, err := parseFactor(tokens, pos+1)
+		if err != nil {
+			return nil, pos, err
+		}
+		return LogicalOp{
+			Operator: "NOT",
+			Children: []Node{child},
+		}, newPos, nil
+	} else if strings.Contains(token, "=") {
 		parts := strings.SplitN(token, "=", 2)
 		if len(parts) != 2 {
 			return nil, pos, fmt.Errorf("invalid key=value pair: %s", token)
@@ -160,38 +170,41 @@ func parseExpr(tokens []string, pos int) (Node, int, error) {
 
 // Evaluate traverses the AST and evaluates the expression
 // against the provided labels. It returns true if the expression is satisfied.
+// If the expression is nil, it always returns true.
 func Evaluate(node Node, labels TestLabels) bool {
-    switch n := node.(type) {
-    case Condition:
-        val, ok := labels[n.Key]
-        return ok && val == n.Value
-    case LogicalOp:
-        switch n.Operator {
+	if node == nil {
+		return true
+	}
+
+	switch n := node.(type) {
+	case Condition:
+		val, ok := labels[n.Key]
+		return ok && val == n.Value
+	case LogicalOp:
+		switch n.Operator {
 		case "NOT":
-            return !Evaluate(n.Children[0], labels)
-        case "AND":
-            return Evaluate(n.Children[0], labels) && Evaluate(n.Children[1], labels)
-        case "OR":
-            return Evaluate(n.Children[0], labels) || Evaluate(n.Children[1], labels)
-        default:
-            return false
-        }
-    default:
-        return false
-    }
+			return !Evaluate(n.Children[0], labels)
+		case "AND":
+			return Evaluate(n.Children[0], labels) && Evaluate(n.Children[1], labels)
+		case "OR":
+			return Evaluate(n.Children[0], labels) || Evaluate(n.Children[1], labels)
+		default:
+			return false
+		}
+	default:
+		return false
+	}
 }
 
 // The entry point for parsing label expressions
 // It takes a string input and returns an AST representation of the expression
 // or an error if the input is invalid.
 func ParseLabelExp(input string) (Node, error) {
-	tokens, err := tokenize(input)
-	if err != nil {
-		return nil, err
-	}
+	tokens := tokenize(input)
 	if len(tokens) == 0 {
 		return nil, fmt.Errorf("empty input")
 	}
+
 	node, pos, err := parseExpr(tokens, 0)
 	if err != nil {
 		return nil, err

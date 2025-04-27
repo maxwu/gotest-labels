@@ -7,6 +7,8 @@ import (
 
 func TestMutateTestFilterByLabels(t *testing.T) {
 	t.Run("Labels enabled in go test list", func(t *testing.T) {
+		t.Parallel()
+
 		origArgs := os.Args
 		defer func() { os.Args = origArgs }()
 		os.Args = []string{"theBinDoesntMatter", "-test.v", "-labels", "group=demo", "-test.list=."}
@@ -24,16 +26,16 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Fail()
 		}
 
-		if tests[0] != "TestSimpleAlpha" {
-			t.Errorf("Expected TestSimpleAlpha, got %v", tests[0])
+		if tests["TestSimpleAlpha"] == nil {
+			t.Errorf("Expected TestSimpleAlpha")
 			t.Fail()
 		}
 
-		if tests[1] != "TestSimpleGamma" {
-			t.Errorf("Expected TestSimpleGamma, got %v", tests[1])
+		if tests["TestSimpleGamma"] == nil {
+			t.Errorf("Expected TestSimpleGamma")
 			t.Fail()
 		}
-		
+
 		if len(os.Args) != 5 {
 			t.Errorf("Expected 5 args after mutation, got %#v", os.Args)
 			t.Fail()
@@ -44,8 +46,9 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Fail()
 		}
 
-		if os.Args[4] != "^TestSimpleAlpha|TestSimpleGamma$" {
-			t.Errorf("Expected ^TestSimpleAlpha|TestSimpleGamma$, got %v", os.Args[4])
+		if os.Args[4] != "^TestSimpleAlpha|TestSimpleGamma$" && os.Args[4] != "^TestSimpleGamma|TestSimpleAlpha$" {
+			// The order of the tests in the regex may vary
+			t.Errorf("Expected ^TestSimpleAlpha|TestSimpleGamma$ or ^TestSimpleAlpha|TestSimpleGamma$, got %v", os.Args[4])
 			t.Fail()
 		}
 	})
@@ -68,11 +71,11 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Fail()
 		}
 
-		if tests[0] != "TestSimpleAlpha" {
-			t.Errorf("Expected TestSimpleAlpha, got %v", tests[0])
+		if tests["TestSimpleAlpha"] == nil {
+			t.Errorf("Expected TestSimpleAlpha")
 			t.Fail()
 		}
-		
+
 		if len(os.Args) != 5 {
 			t.Errorf("Expected 5 args after mutation, got %#v", os.Args)
 			t.Fail()
@@ -98,25 +101,29 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 		defaultPkg = "./examples/simple"
 		tests := MutateTestFilterByLabels()
 		t.Logf("Filtered tests: %v\n", tests)
-		if len(tests)!= 3 {
+		if len(tests) != 3 {
 			t.Errorf("Expected 3 tests, got %v", len(tests))
 			t.Fail()
 		}
-		if tests[0] != "TestSimpleAlpha" {
-			t.Errorf("Expected TestSimpleAlpha, got %v", tests[0])
+		if tests["TestSimpleAlpha"] == nil {
+			t.Errorf("Expected TestSimpleAlpha")
 			t.Fail()
 		}
-		if tests[1] != "TestSimpleBeta" {
-			t.Errorf("Expected TestSimpleBeta, got %v", tests[1])
+		if tests["TestSimpleBeta"] == nil {
+			t.Errorf("Expected TestSimpleBeta")
 			t.Fail()
 		}
-		if tests[2] != "TestSimpleGamma" {
-			t.Errorf("Expected TestSimpleGamma, got %v", tests[2])
+		if tests["TestSimpleGamma"] == nil {
+			t.Errorf("Expected TestSimpleGamma")
 			t.Fail()
 		}
-		if len(os.Args)!= 3 {
+		if tests["TestUnderSimpleDelta"] != nil {
+			t.Errorf("Unexpected TestUnderSimpleDelta")
+			t.Fail()
+		}
+		if len(os.Args) != 3 {
 			t.Errorf("Expected 3 args after mutation, got %#v", os.Args)
-			t.Fail()	
+			t.Fail()
 		}
 	})
 }

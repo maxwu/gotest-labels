@@ -2,7 +2,9 @@ package gotest_labels
 
 import (
 	"log"
+	"maps"
 	"os"
+	"slices"
 	"strings"
 )
 
@@ -15,19 +17,20 @@ type TestLabels map[string]string
 // involved package
 // The function returns the list of test functions that matched the labels as well. The result can be used to estimate
 // the test costs or support the test operation/observability/report features.
-func MutateTestFilterByLabels() []string {
+func MutateTestFilterByLabels() map[string]TestLabels {
 	args := ParseOSArgs()
 	tests, listMode := getTestFuncsByLabels(args)
 
 	// If the labels are not enabled, return the original tests without mutating the os.Args.
 	// The results are useful to estimate the test time and costs.
 	if !args.labelsEnabled() {
-		log.Printf("Labels are not enabled, running tests as normal and still collect the tests for estimation")
+		log.Printf("Labels are not enabled, running tests as normal and still collect the activated tests")
 		return tests
 	}
 
 	// If the labels are enabled, mutate the os.Args to run the selected tests.
-	pattern := "^" + strings.Join(tests, "|") + "$"
+	testNames := slices.Collect(maps.Keys(tests))
+	pattern := "^" + strings.Join(testNames, "|") + "$"
 	if listMode {
 		os.Args = append(os.Args, "-test.list", pattern)
 	} else {
@@ -38,7 +41,8 @@ func MutateTestFilterByLabels() []string {
 }
 
 // The internal function to get the selected test functions by labels and whether it's in listing mode
-func getTestFuncsByLabels(args *cliArgs) ([]string, bool) {
+// It returns a map of function names to their labels
+func getTestFuncsByLabels(args *cliArgs) (map[string]TestLabels, bool) {
 
 	allPkgs, err := getPackages()
 	if err != nil {
@@ -46,7 +50,8 @@ func getTestFuncsByLabels(args *cliArgs) ([]string, bool) {
 		return nil, args.listMode
 	}
 
-	var allTestFuncs []string
+	allTestFuncs := make(map[string]TestLabels)
+
 	for _, pkg := range allPkgs {
 		files := getTestFiles(pkg)
 		funcs, err := FindTestFuncs(files, args.labelsAST)
@@ -54,7 +59,11 @@ func getTestFuncsByLabels(args *cliArgs) ([]string, bool) {
 			log.Printf("Error parsing tests %s: : %#v", pkg.Name, err)
 			return nil, args.listMode
 		}
-		allTestFuncs = append(allTestFuncs, funcs...)
+		// I haven't considered the duplicated test function names since it's the package level
+		// filter for each MutateTestFilterByLabels call.
+		for k, v := range funcs {
+			allTestFuncs[k] = v
+		}
 	}
 
 	matchedFuncs := filterTestFuncs(allTestFuncs, args.runRegex)
