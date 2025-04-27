@@ -170,7 +170,12 @@ func parseExpr(tokens []string, pos int) (Node, int, error) {
 
 // Evaluate traverses the AST and evaluates the expression
 // against the provided labels. It returns true if the expression is satisfied.
+// If the expression is nil, it always returns true.
 func Evaluate(node Node, labels TestLabels) bool {
+	if node == nil {
+		return true
+	}
+
 	switch n := node.(type) {
 	case Condition:
 		val, ok := labels[n.Key]

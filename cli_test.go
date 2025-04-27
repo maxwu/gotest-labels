@@ -6,7 +6,6 @@ import (
 )
 
 func TestNewCliArgs(t *testing.T) {
-
 	t.Run("New CliArgs with env var", func(t *testing.T) {
 		t.Setenv("TEST_LABELS", "group=demo")
 

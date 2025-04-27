@@ -67,6 +67,7 @@ func TestTokenize(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 			got := tokenize(test.exp)
 			if len(got) != len(test.want) {
 				t.Errorf("tokenize(%q) returned %#v, want %#v", test.exp, got, test.want)
@@ -100,6 +101,8 @@ func TestParseLabelExp(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			got, err := ParseLabelExp(test.exp)
 			if err != nil && test.err == "" {
 				t.Errorf("ParseLabelExp(%q) generated \"%v\", want no error", test.exp, err)
@@ -179,6 +182,8 @@ func TestEvaluate(t *testing.T) {
 
 	for name, test := range tests {
 		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
 			node, err := ParseLabelExp(test.exp)
 			if err != nil && test.err == "" {
 				t.Errorf("Evaluate(%q) generated \"%v\", want no error", test.exp, err)
