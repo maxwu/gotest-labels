@@ -59,9 +59,17 @@ func TestTokenize(t *testing.T) {
 			exp:  " key = value && key2 = value2 || key3 = value3 ",
 			want: []string{"key", "=", "value", "&&", "key2", "=", "value2", "||", "key3", "=", "value3"},
 		},
-		"spaces around operators and parentheses": {
-			exp:  " ( key = value && key2 = value2 ) || key3 = value3 ",
-			want: []string{"(", "key", "=", "value", "&&", "key2", "=", "value2", ")", "||", "key3", "=", "value3"},
+		"unbalanced parentheses": {
+			exp:  "(key=value && key2=value2 || key3=value3",
+			want: []string{"(", "key=value", "&&", "key2=value2", "||", "key3=value3"},
+		},
+		"double operators": {
+			exp:  "key=value&&||key2=value2",
+			want: []string{"key=value", "&&", "||", "key2=value2"},
+		},
+		"multiple spaces": {
+			exp:  "key=value  &&  key2=value2",
+			want: []string{"key=value", "&&", "key2=value2"},
 		},
 	}
 
@@ -96,6 +104,18 @@ func TestParseLabelExp(t *testing.T) {
 			exp:  "key=value",
 			want: `gotest_labels.Condition{Key:"key", Value:"value"}`,
 			err:  "",
+		},
+		"unclosed parenthesis": {
+			exp: "(key=value",
+			err: "expected closing bracket",
+		},
+		"unexpected end after not": {
+			exp: "!",
+			err: "unexpected end of input",
+		},
+		"unexpected token": {
+			exp: "a b",
+			err: "unexpected token: a",
 		},
 	}
 
@@ -201,4 +221,18 @@ func TestEvaluate(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestEvaluateUnreachable(t *testing.T) {
+	t.Run("invalid operator", func(t *testing.T) {
+		node := LogicalOp{Operator: "XOR"}
+		if Evaluate(node, nil) {
+			t.Errorf("Evaluate should return false for invalid operator")
+		}
+	})
+		t.Run("invalid node type", func(t *testing.T) {
+		if Evaluate("a string", nil) {
+			t.Errorf("Evaluate should return false for invalid node type")
+		}
+	})
 }
