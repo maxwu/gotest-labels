@@ -46,9 +46,8 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 			t.Fail()
 		}
 
-		if os.Args[4] != "^TestSimpleAlpha|TestSimpleGamma$" && os.Args[4] != "^TestSimpleGamma|TestSimpleAlpha$" {
-			// The order of the tests in the regex may vary
-			t.Errorf("Expected ^TestSimpleAlpha|TestSimpleGamma$ or ^TestSimpleAlpha|TestSimpleGamma$, got %v", os.Args[4])
+		if os.Args[4] != "^(TestSimpleAlpha|TestSimpleGamma)$" {
+			t.Errorf("Expected ^(TestSimpleAlpha|TestSimpleGamma)$, got %v", os.Args[4])
 			t.Fail()
 		}
 	})
@@ -123,6 +122,37 @@ func TestMutateTestFilterByLabels(t *testing.T) {
 		}
 		if len(os.Args) != 3 {
 			t.Errorf("Expected 3 args after mutation, got %#v", os.Args)
+			t.Fail()
+		}
+	})
+
+	t.Run("Labels enabled with no matched tests", func(t *testing.T) {
+		origArgs := os.Args
+		defer func() { os.Args = origArgs }()
+		os.Args = []string{"theBinDoesntMatter", "-test.v", "-labels", "group=does-not-exist"}
+		origDefaultPkg := defaultPkg
+		defer func() { defaultPkg = origDefaultPkg }()
+		defaultPkg = "./examples/simple"
+
+		tests := MutateTestFilterByLabels()
+
+		if len(tests) != 0 {
+			t.Errorf("Expected no tests, got %v", len(tests))
+			t.Fail()
+		}
+
+		if len(os.Args) != 4 {
+			t.Errorf("Expected 4 args after mutation, got %#v", os.Args)
+			t.Fail()
+		}
+
+		if os.Args[2] != "-test.run" {
+			t.Errorf("Expected test.run, got %v", os.Args[2])
+			t.Fail()
+		}
+
+		if os.Args[3] != "^$" {
+			t.Errorf("Expected ^$, got %v", os.Args[3])
 			t.Fail()
 		}
 	})

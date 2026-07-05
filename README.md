@@ -1,10 +1,12 @@
-# gotest_labels
+# gotest-labels
 
 [![codecov](https://codecov.io/gh/maxwu/gotest-labels/graph/badge.svg?token=OASE32SSFW)](https://codecov.io/gh/maxwu/gotest-labels)
 [![Go Report Card](https://goreportcard.com/badge/github.com/maxwu/gotest-labels)](https://goreportcard.com/report/github.com/maxwu/gotest-labels)
 
 GoTestLabels enables the selection of test cases by labels from the testing function comments. The filter expression is based on the `labelKey=value` format, `||`, `&&`, `!` and parenthesis are supported. It is a tiny Go package with less than 1k NSCL go source code
-and no third party dependencies so it's easy to be equipped in any golang projects or testing frameworks.
+and one `golang.org/x/tools` dependency for Go package loading, so it's easy to be equipped in any golang projects or testing frameworks.
+
+Gotest-labels requires Go 1.26 or newer. The module path is `github.com/maxwu/gotest-labels`; when explicitly imported, the package identifier is `gotest_labels` because Go package names cannot contain hyphens.
 
 ## Quick Start
 
@@ -44,11 +46,11 @@ go test -v -count=1 ./examples/simple -labels="group=demo&&!(env=prod)"
 
 ### Filter the tests with labels
 
-Three ways are supported to use the package to filter tests, one is just to import the `github.com/maxwu/gotestlabels/apply` package
+Three ways are supported to use the package to filter tests, one is just to import the `github.com/maxwu/gotest-labels/apply` package
 in anonymous, which has an automatically init function to do the filtering. The other way is to explicitly import
-the `github.com/maxwu/gotestlabels` package and call the `gotestlabels.MutateTestFuncsByLabels()` function in your
+the `github.com/maxwu/gotest-labels` package and call the `gotest_labels.MutateTestFilterByLabels()` function in your
 testing package's init function or TestMain function. If the parent package refers to a sub package underneath, adding
-the invocation of `gotestlabels.MutateTestFuncsByLabels()` in `TestMain()` function is the required safe way.
+the invocation of `gotest_labels.MutateTestFilterByLabels()` in `TestMain()` function is the required safe way.
 
 Use the simple way, only one line of anonymous import is needed:
 
@@ -119,7 +121,7 @@ If there's no `TEST_LABELS` var or `-labels` flag passed in, the package will do
 
 If there are regex selectors like `-run` or `-list`, the labels will be applied after the regex selectors.
 
-Due to go package loading mechanism, each involved package still needs to equip with the gotestlabels via one of the
+Due to go package loading mechanism, each involved package still needs to equip with gotest-labels via one of the
 provided three ways even the wildcard `your_package/...` is used in CLI.
 
 ### Examples
@@ -131,7 +133,7 @@ package yourpackage
 
 import (
     "testing"
-    _ "github.com/maxwu/gotestlabels/apply"
+    _ "github.com/maxwu/gotest-labels/apply"
 )
 
 // Add labels to the test function code comment. These labels can be evaluated with conditional expression from filter.
@@ -166,7 +168,7 @@ only the TestSimpleAlpha and TestSimpleGamma cases are run and the TestSimpleBet
     demo_test.go:25: Testing examples.simple.TestSimpleGamma
 --- PASS: TestSimpleGamma (0.00s)
 PASS
-ok  	gotestlabels/examples/simple	0.267s
+ok  	github.com/maxwu/gotest-labels/examples/simple	0.267s
 ```
 
 The filter expression supports `&&`, `||`, `!` and parenthesis. For example, the below OR condition selects 3 cases:
@@ -192,12 +194,12 @@ Or, users can list the test cases with labels.
 ❯ go test -v ./examples/simple -list . -labels "group=demo"
 TestSimpleAlpha
 TestSimpleGamma
-ok  	gotestlabels/examples/simple	0.268s
+ok  	github.com/maxwu/gotest-labels/examples/simple	0.268s
 # Or, use the CLI flag
 ❯ TEST_LABELS="group=demo" go test -v ./examples/simple -list .
 TestSimpleAlpha
 TestSimpleGamma
-ok  	gotestlabels/examples/simple	0.268s
+ok  	github.com/maxwu/gotest-labels/examples/simple	0.268s
 ```
 
 To run the tests with label `env=dev`, the CLI could be:
@@ -208,19 +210,25 @@ To run the tests with label `env=dev`, the CLI could be:
     demo_test.go:20: Testing examples.simple.TestSimpleBeta
 --- PASS: TestSimpleBeta (0.00s)
 PASS
-ok  	gotestlabels/examples/simple	0.270s
+ok  	github.com/maxwu/gotest-labels/examples/simple	0.270s
 ```
 
 Readers are kindly reminded to add `-count=1` to the CLI since there's only env var changes so the tests shall be forced
 to rerun. Actually the test codes are rebuilt to new temporary binary file but the objective of this package is to offload
 readers from golang `testing` package internal details.
 
-## Limitation
+## Limitations
 
-The test running args are mutated by updating or adding a regex to matching test function names. Which means if two test
-functions share the same name in different packages, they are either both selected or both skipped. This is due to the
-go testing package regex filter mechanism. To mitigate it, the two packages with duplicated test name shall be launched
-separately. Reader could refer to below example to select package and its sub packages in CLI.
+Gotest-labels filters tests by mutating `os.Args` before the test binary runs. It appends or updates `-test.run` or
+`-test.list` with a generated regex of matching test function names. This keeps the integration lightweight, but it also
+inherits the `go test` regex selector semantics.
+
+If no tests match the label expression, gotest-labels uses `^$` so the test binary runs no test functions instead of
+falling back to the full suite.
+
+If two test functions share the same name in different packages, they are either both selected or both skipped. To
+mitigate it, the packages with duplicated test names shall be launched separately. Reader could refer to below example to
+select package and its sub packages in CLI.
 
 ```sh
 ❯ go test -v .{,/pkg1,/pkg2}
@@ -242,7 +250,7 @@ history expansion.
 ```
 
 * If it's expected to select test cases in the current package and all the sub packages, the sub packages shall also be
-equipped with the gotestlabels, e.g. by adding `_ "github.com/maxwu/gotest-labels/apply"` in one `*_test.go` file for
+equipped with gotest-labels, e.g. by adding `_ "github.com/maxwu/gotest-labels/apply"` in one `*_test.go` file for
 each sub package. For one package, it's only needed in one test source file.
 
 ## Background

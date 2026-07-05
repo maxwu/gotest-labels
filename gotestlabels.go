@@ -29,8 +29,7 @@ func MutateTestFilterByLabels() map[string]TestLabels {
 	}
 
 	// If the labels are enabled, mutate the os.Args to run the selected tests.
-	testNames := slices.Collect(maps.Keys(tests))
-	pattern := "^" + strings.Join(testNames, "|") + "$"
+	pattern := buildTestNamePattern(tests)
 	if listMode {
 		os.Args = append(os.Args, "-test.list", pattern)
 	} else {
@@ -38,6 +37,18 @@ func MutateTestFilterByLabels() map[string]TestLabels {
 	}
 
 	return tests
+}
+
+func buildTestNamePattern(tests map[string]TestLabels) string {
+	testNames := slices.Collect(maps.Keys(tests))
+	if len(testNames) == 0 {
+		return "^$"
+	}
+	slices.Sort(testNames)
+	if len(testNames) == 1 {
+		return "^" + testNames[0] + "$"
+	}
+	return "^(" + strings.Join(testNames, "|") + ")$"
 }
 
 // The internal function to get the selected test functions by labels and whether it's in listing mode
